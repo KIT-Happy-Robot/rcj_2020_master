@@ -1,0 +1,14 @@
+{'turn right':'motion',
+ 'turn left':'motion',
+ 'right face':'motion',
+ 'left face':'motion',
+ 'about face':'motion',
+ 'go straight':'motion',
+ 'go back':'motion',
+ 'follow me':'motion',
+ 'save location':'event',
+ 'stop following':'motion',
+ 'start go get it':'event',
+ 'start ggi learning':'event',
+ 'start test phase':'event'
+ }
