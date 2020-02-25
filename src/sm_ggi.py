@@ -12,7 +12,8 @@ import sys
 import rospy
 import smach
 import smach_ros
-from rcj_2020_ggi.srv import GgiTestPhase, GgiTestPhaseResponse
+from ggi.srv import GgiLearning 
+from std_srvs.srv import Empty
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
 from common_action_client import *
@@ -23,10 +24,11 @@ class Training(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['training_finish'])
         # Service
-        self.training_srv() = rospy.ServiceProxy('/ggi_training_phase', Empty)
+        self.training_srv = rospy.ServiceProxy('/ggi_training_phase', Empty)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
+        m6Control(0.3)
         speak('Start GoGetIt')
         # enterTheRoomAC(0.8)
         self.training_srv()
@@ -66,6 +68,7 @@ class ListenCommand(smach.State):
                              output_keys = ['cmd_out'])
         # ServiceProxy
         # self.listen_srv = rospy.ServiceProxy('/gpsr/actionplan', ActionPlan)
+        self.ggi_listen_srv = rospy.ServiceProxy('/test_phase', GgiLearning)
         # Value
         self.listen_count = 1
         self.cmd_count = 1
@@ -74,22 +77,25 @@ class ListenCommand(smach.State):
         rospy.loginfo('Executing state: LISTEN_COMMAND')
         if self.cmd_count == 4:
             speak('Finish all command')
+            speak('Finish GoGetIt')
             return 'all_cmd_finish'
         elif self.listen_count <= 3:
             speak('CommandNumber is ' + str(self.cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
             speak('Please instruct me')
             # result = self.listen_srv()
+            location = self.ggi_listen_srv().location_name
             result = True
             if result:
             # if result.result:
                 self.listen_count = 1
                 self.cmd_count += 1
-                userdata.cmd_out = result
+                # userdata.cmd_out = result
+                userdata.cmd_out = location
                 return 'listen_success'
             else:
                 self.listen_count += 1
-                speak("Sorry, I could't listen")
+                speak("I could't listen")
                 return 'listen_failure'
         else:
             speak("I couldn't understand the instruction")
@@ -109,8 +115,9 @@ class ExeAction(smach.State):
         rospy.loginfo('Executing state: EXE_ACTION')
         # action = userdata.cmd_in.action
         # data = userdata.cmd_in.data
-        action = ['go']
-        data = ['table']
+        name = userdata.cmd_in
+        action = ['go','grasp','go','give']
+        data = [name,'any','operator','any']
         result = exeActionPlanAC(action, data)
         if result:
             return 'action_success'

@@ -32,7 +32,7 @@ class Enter(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
         speak('Start GPSR')
-        # enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         return 'enter_finish'
 
 

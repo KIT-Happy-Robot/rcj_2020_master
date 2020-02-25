@@ -14,7 +14,7 @@ import rosparam
 import smach
 import smach_ros
 from std_msgs.msg import String
-from std_srvs.msg import Empty
+from std_srvs.srv import Empty, EmptyResponse
 from mimi_common_pkg.srv import LocationSetup
 from ggi.srv import ListenCommand, GgiLearning, YesNo
 
@@ -151,10 +151,10 @@ class GgiTrainingServer():
                     remapping = {'cmd_input':'cmd_name'})
 
         outcome = sm_top.execute()
+        return EmptyResponse()
 
 
 if __name__ == '__main__':
     rospy.init_node('ggi_training_phase', anonymous = True)
     gts = GgiTrainingServer()
     rospy.spin()
-    main()
