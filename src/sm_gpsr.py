@@ -13,10 +13,7 @@ import rospy
 import smach
 import smach_ros
 from std_msgs.msg import String
-from std_srvs.srv import Trigger
-from ggi.srv import YesNo
-from gpsr.srv import ActionPlan
-from mimi_common_pkg.srv import ManipulateSrv
+from voice_common_pkg.srv import YesNo, ActionPlan
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts/')
 from common_function import speak, searchLocationName

@@ -12,12 +12,12 @@ import sys
 import rospy
 import smach
 import smach_ros
-from ggi.srv import GgiLearning 
+from voice_common_pkg.srv import GgiLearning 
 from std_srvs.srv import Empty
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
-from common_action_client import *
-from common_function import *
+from common_action_client import navigationAC, enterTheRoomAC, exeActionPlanAC
+from common_function import speak, m6Control, searchLocationName
 
 
 class Training(smach.State):
