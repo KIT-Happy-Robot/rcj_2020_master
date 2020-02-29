@@ -1,6 +1,6 @@
 <launch>
     <rosparam file="$(find mimi_common_pkg)/config/ggi.yaml" command="load" ns="/location_dict" />
-    <rosparam file="$(find rcj_2020_master)/config/ggi_cmd_state.yaml" command="load" ns="/ggi/cmd_state" />
+    <rosparam file="$(find mimi_voice_control)/config/ggi_cmd_state.yaml" command="load" ns="/ggi/cmd_state" />
     <node pkg="mimi_voice_control" name="ggi_training_phase" type="ggi_training_phase.py" output="screen" />
     <node pkg="rcj_2020_master" name="sm_ggi" type="sm_ggi.py" output="screen"/>
 </launch>
