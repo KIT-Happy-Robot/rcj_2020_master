@@ -19,7 +19,10 @@ from common_function import *
 from mimi_common_pkg.srv import ManipulateSrv
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_voice_control/src')
-from voice_common_pkg import *
+from voice_common_pkg.srv import WhatDidYouSay
+ 
+#sys.path.insert(0, '/home.athome/catkin_ws/src/basic_func/src')
+#import bf_conversation_srvserver.srv
 
 class EnterRoom(smach.State):
     def __init__(self):
@@ -45,6 +48,7 @@ class MoveAndPick(smach.State):
         self.flag = 'failed'
 
     def execute(self, userdata):
+        return 'success'
         location_list = searchLocationName(self.location_name)
         while not rospy.is_shutdown() and self.flag == 'failed':
             self.flag = navigationAC(location_list)
@@ -68,6 +72,7 @@ class MoveAndPlace(smach.State):
                             'bag','toy','smartphone','book','pen']
 
     def execute(self, userdata):
+        return 'completed'
         if userdata.object_name_in  in self.object_list:
             location_list = searchLocationName('chair')
         else:
@@ -89,6 +94,7 @@ class AvoidThat(smach.State):
     def execute(self, userdata):
         print("AvoidThat")
         speak('start Avoid That')
+        return 'to_WDYS'
         location_list = searchLocationName('operator')
         while not rospy.is_shutdown() and self.flag == 'failed':
             self.flag = navigationAC(location_list)
@@ -101,10 +107,10 @@ class TimeCount(smach.State):
         smach.State.__init__(self,
                             outcomes=['to_PS'],
                             output_keys=['start_time_out'])
+    
     def execute(self, userdata):
-        userdata.start_time_out = 0
         speak('Staet What did you say')
-        start_time_out = time.time()
+        userdata.start_time_out = time.time()
         return 'to_PS'
 
 
@@ -116,7 +122,7 @@ class PersonSearch(smach.State):
 
     def execute(self, userdata):
         #人発見プログラムを起動
-        m6Control(0.5)
+        #m6Control(0.5)
         speak('found Person')
         return 'found'
 
@@ -125,25 +131,28 @@ class QuestionResponse(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['continues', 'give_up', 'completed'],
-                            input_keys=['success_count_input' , 'start_time_in'],
-                            output_keys=['success_count_output'])
-       # self.WDYS = rospy.ServiceProxy('/WhatDidYouSay', WhatDidYouSay.srv)
-        target_time = 150
+                            input_keys=['success_count_in' , 'start_time_in'],
+                            output_keys=['success_count_out'])
+        self.WDYS = rospy.ServiceProxy('/bf/conversation_srvserver', WhatDidYouSay)
+        self.target_time = 160
 
     def execute(self, userdata):
         end_time = time.time()
-        if end_time - userdata.start_time_in >= target_time:
+        if end_time - userdata.start_time_in >= self.target_time:
             speak('Cancel Q and A session')
             return 'give_up'
-        #resalt = self.WDYS()
-        resalt = True
+        speak('ready')
+        resalt = self.WDYS()
+        print resalt
+        print userdata.success_count_in
+        print userdata.success_count_out
         if resalt == True:
-            userdata.success_count_output = userdata.success_count_input + 1
-            if userdata.success_count_output == 3:
+            userdata.success_count_out = userdata.success_count_in + 1
+            if userdata.success_count_out == 3:
                 return 'completed'
-            elif userdata.success_count_output != 3:
+            elif userdata.success_count_out != 3:
                 return 'continues'
-        return 'completed'
+        return 'continues'
 
 
 class ExitRoom(smach.State):
@@ -154,8 +163,10 @@ class ExitRoom(smach.State):
 
     def execute(slef, userdata):
         speak('Go to the exit')
+        return 'to_finish'
+        location_list = searchLocationName('diningroom')
         while not rospy.is_shutdown and self.flag == 'failed':
-            navigationAC('Exit')
+            navigationAC(location_list)
             rospy.sleep(1.0)
         return 'to_finish'
 
@@ -187,8 +198,8 @@ def main():
 
         ### what did you say
         sm_wdys = smach.StateMachine(outcomes=['to_exit'])
-        sm_wdys.userdata.sm_time = 0
-        sm_wdys.userdata.sm_success = 'failed'
+        sm_wdys.userdata.sm_time = time.time()
+        sm_wdys.userdata.sm_success = 0
 
         with sm_wdys:
             smach.StateMachine.add('STARTWDYS', TimeCount(),
@@ -200,9 +211,9 @@ def main():
                             transitions={'continues':'QUESTION',
                                         'give_up':'to_exit',
                                         'completed':'to_exit'},
-                            remapping={'success_count_input':'sm_success',
-                                       'success_count_output':'sm_success',
-                                       'start_time__in':'sm_time'})
+                            remapping={'success_count_in':'sm_success',
+                                       'success_count_out':'sm_success',
+                                       'start_time_in':'sm_time'})
         smach.StateMachine.add('WHAT_DID_YOU_SAY', sm_wdys,
                             transitions={'to_exit':'EXIT'})
 
