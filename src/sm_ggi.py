@@ -28,7 +28,7 @@ class Training(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
-        m6Control(0.3)
+        m6Control(0.1)
         speak('Start GoGetIt')
         # enterTheRoomAC(0.8)
         self.training_srv()

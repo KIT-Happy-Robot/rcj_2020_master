@@ -16,7 +16,7 @@ from std_msgs.msg import String
 from voice_common_pkg.srv import YesNo, ActionPlan
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts/')
-from common_function import speak, searchLocationName
+from common_function import speak, searchLocationName, m6Control
 from common_action_client import (enterTheRoomAC,
                                   navigationAC,
                                   exeActionPlanAC)
@@ -80,6 +80,7 @@ class ListenCommand(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: LISTEN_COMMAND')
         cmd_count = userdata.cmd_count_in
+        m6Control(0.1)
         if self.listen_count <= 3:
             speak('CommandNumber is ' + str(cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
