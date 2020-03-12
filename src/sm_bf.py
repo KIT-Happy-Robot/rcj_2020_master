@@ -54,8 +54,8 @@ class MoveAndPick(smach.State):
             self.flag = navigationAC(location_list)
             rospy.sleep(1.0)
         userdata.object_name_out = 'cup'
-       # resalt = self.grab(userdata.object_name_out)  #object_nameによってif等で条件分岐
-        resalt = True
+       # result = self.grab(userdata.object_name_out)  #object_nameによってif等で条件分岐
+        result = True
         if resalt == True:
             return 'success'
         else:
@@ -106,11 +106,12 @@ class TimeCount(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['to_PS'],
-                            output_keys=['start_time_out'])
+                            output_keys=['start_time_out', 'success_count_out'])
     
     def execute(self, userdata):
         speak('Staet What did you say')
         userdata.start_time_out = time.time()
+        userdata.success_count_out = 0
         return 'to_PS'
 
 
@@ -131,28 +132,30 @@ class QuestionResponse(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['continues', 'give_up', 'completed'],
-                            input_keys=['success_count_in' , 'start_time_in'],
-                            output_keys=['success_count_out'])
+                            input_keys=['success_count_in', 'start_time_in'],
+                            output_keys=['success_count_out', 'start_time_out'])
         self.WDYS = rospy.ServiceProxy('/bf/conversation_srvserver', WhatDidYouSay)
-        self.target_time = 160
+        self.target_time = 160.0
 
     def execute(self, userdata):
         end_time = time.time()
+        userdata.start_time_out = userdata.start_time_in
         if end_time - userdata.start_time_in >= self.target_time:
             speak('Cancel Q and A session')
             return 'give_up'
         speak('ready')
-        resalt = self.WDYS()
-        print resalt
-        print userdata.success_count_in
-        print userdata.success_count_out
-        if resalt == True:
-            userdata.success_count_out = userdata.success_count_in + 1
-            if userdata.success_count_out == 3:
+        result = self.WDYS().result
+        count_in = userdata.success_count_in
+        if result == True:
+            count_in = userdata.success_count_in
+            count_out = count_in + 1
+            userdata.success_count_out = count_out
+            if coutn_out == 3:
                 return 'completed'
-            elif userdata.success_count_out != 3:
-                return 'continues'
-        return 'continues'
+            else:
+                return 'continues'  
+        else:
+            return 'continues'
 
 
 class ExitRoom(smach.State):
@@ -199,12 +202,13 @@ def main():
         ### what did you say
         sm_wdys = smach.StateMachine(outcomes=['to_exit'])
         sm_wdys.userdata.sm_time = time.time()
-        sm_wdys.userdata.sm_success = 0
+        #sm_wdys.userdata.sm_success
 
         with sm_wdys:
             smach.StateMachine.add('STARTWDYS', TimeCount(),
                             transitions={'to_PS':'PersonSearch'},
-                            remapping={'start_time_out':'sm_time'})
+                            remapping={'start_time_out':'sm_time',
+                                       'success_count_out':'sm_success'})
             smach.StateMachine.add('PersonSearch', PersonSearch(),
                             transitions={'found':'QUESTION'})
             smach.StateMachine.add('QUESTION', QuestionResponse(),
@@ -213,7 +217,8 @@ def main():
                                         'completed':'to_exit'},
                             remapping={'success_count_in':'sm_success',
                                        'success_count_out':'sm_success',
-                                       'start_time_in':'sm_time'})
+                                       'start_time_in':'sm_time',
+                                       'start_time_out':'sm_time'})
         smach.StateMachine.add('WHAT_DID_YOU_SAY', sm_wdys,
                             transitions={'to_exit':'EXIT'})
 
