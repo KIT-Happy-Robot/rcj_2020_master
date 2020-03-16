@@ -32,7 +32,7 @@ class EnterRoom(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Enter The Room')
         speak('start pick and place')
-       # enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         return 'to_pap'
 
 
@@ -48,7 +48,7 @@ class MoveAndPick(smach.State):
         self.flag = 'failed'
 
     def execute(self, userdata):
-        return 'success'
+        #return 'success'
         location_list = searchLocationName(self.location_name)
         while not rospy.is_shutdown() and self.flag == 'failed':
             self.flag = navigationAC(location_list)
@@ -56,7 +56,7 @@ class MoveAndPick(smach.State):
         userdata.object_name_out = 'cup'
        # result = self.grab(userdata.object_name_out)  #object_nameによってif等で条件分岐
         result = True
-        if resalt == True:
+        if result == True:
             return 'success'
         else:
             return 'failed'
@@ -72,7 +72,7 @@ class MoveAndPlace(smach.State):
                             'bag','toy','smartphone','book','pen']
 
     def execute(self, userdata):
-        return 'completed'
+        #return 'completed'
         if userdata.object_name_in  in self.object_list:
             location_list = searchLocationName('chair')
         else:
@@ -122,10 +122,16 @@ class PersonSearch(smach.State):
         self.flag = 'failed'
 
     def execute(self, userdata):
-        #人発見プログラムを起動
-        #m6Control(0.5)
-        speak('found Person')
+        result = approachPersonAC().result
+        if result == True:
+            m6Control(0.5)
+            speak('I found the questioner')
+        else:
+            speak('Please come in front of me')
+            rospy.sleep(5.0)
+            speak('Thank you')
         return 'found'
+
 
 
 class QuestionResponse(smach.State):
