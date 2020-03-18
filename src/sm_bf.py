@@ -10,6 +10,7 @@ import time
 import sys
 
 import rospy
+from std_msgs.msg import String
 import smach
 import smach_ros
 
@@ -32,7 +33,7 @@ class EnterRoom(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Enter The Room')
         speak('start pick and place')
-        #enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         return 'to_pap'
 
 
@@ -44,16 +45,16 @@ class MoveAndPick(smach.State):
                             output_keys=['object_name_out'])
         #Service
         self.grab = rospy.ServiceProxy('/manipulation', ManipulateSrv)
+        self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)   
        #parameter 
         self.location_name = 'table'
         self.flag = 'failed'
 
     def execute(self, userdata):
-        #location_list = searchLocationName(self.location_name)
-        #while not rospy.is_shutdown() and self.flag == 'failed':
-        #    self.flag = navigationAC(location_list)
-        #    rospy.sleep(1.0)
+        location_list = searchLocationName(self.location_name)
+        self.flag = navigationAC(location_list)
         #userdata.object_name_out = userdata.object_name_in
+        self.pub_location.publish('table')
         result = self.grab('cup').result  #object_nameによってif等で条件分岐
         if result == True:
             return 'success'
@@ -69,17 +70,17 @@ class MoveAndPlace(smach.State):
         self.flag = 'failed'
         self.object_list = ['cup','bottle','snack','dish','chips',
                             'bag','toy','smartphone','book','pen']
-        self.arm_srv = rospy.ServiceProxy('/change_arm_pose', ManipulateSrv)
+        self.arm_srv = rospy.ServiceProxy('/servo/arm', ManipulateSrv)
+        self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)
 
     def execute(self, userdata):
         if userdata.object_name_in  in self.object_list:
             location_list = searchLocationName('chair')
         else:
             location_list = searchLocationName('chair')
-        while  not rospy.is_shutdown() and self.flag == 'failed':
-            self.flag = navigationAC(location_list)
-            rospy.sleep(1.0)
-        self.arm_srv
+        self.flag = navigationAC(location_list)
+        self.pub_location.publish('chair')
+        self.arm_srv('place')
         return 'completed'
 
 
@@ -87,16 +88,12 @@ class AvoidThat(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['to_WDYS'])
-        self.flag = 'failed'
 
     def execute(self, userdata):
         print("AvoidThat")
         speak('start Avoid That')
         location_list = searchLocationName('operator')
-        self.flag = navigationAC(location_list)
-       # while not rospy.is_shutdown() and self.flag == 'failed':
-       #     self.flag = navigationAC(location_list)
-       #     rospy.sleep(1.0)
+        navigationAC(location_list)
         return 'to_WDYS'
 
 
@@ -166,14 +163,12 @@ class ExitRoom(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['to_finish'])
-        self.flag = 'failed'
 
     def execute(slef, userdata):
         speak('Go to the exit')
         location_list = searchLocationName('entrance')
-        while not rospy.is_shutdown and self.flag == 'failed':
-            self.flag =  navigationAC(location_list)
-            rospy.sleep(1.0)
+        navigationAC(location_list)
+        speak('finish what did you say')
         return 'to_finish'
 
 
