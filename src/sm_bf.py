@@ -22,8 +22,6 @@ from mimi_common_pkg.srv import ManipulateSrv
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_voice_control/src')
 from voice_common_pkg.srv import WhatDidYouSay
  
-#sys.path.insert(0, '/home.athome/catkin_ws/src/basic_func/src')
-#import bf_conversation_srvserver.srv
 
 class EnterRoom(smach.State):
     def __init__(self):

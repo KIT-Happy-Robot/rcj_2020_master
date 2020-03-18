@@ -42,7 +42,7 @@ class DecideMove(smach.State):
         self.posi_sub = rospy.Subscriber('/navigation/move_place', String, self.currentPosiCB)
         # Value
         self.operator_coord = searchLocationName('operator')
-        self.exit_coord = searchLocationName('entrance')
+        self.exit_coord = searchLocationName('exit')
         self.current_position = 'none'
 
     def currentPosiCB(self, data):
@@ -51,7 +51,7 @@ class DecideMove(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: DECIDE_MOVE')
         if userdata.cmd_count_in == 4:
-            speak('Finish all command, Move to entrance')
+            speak('Finish all command, Move to exit')
             navigationAC(self.exit_coord)
             speak('Finish GPSR')
             return 'all_cmd_finish'
