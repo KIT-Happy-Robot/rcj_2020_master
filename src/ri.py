@@ -14,10 +14,10 @@ sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
 from common_action_client import *
 from common_function import *
 
-def main(self):
+def main():
     speak('start robot inspection')
     enterTheRoomAC(0.8)
-    location_list = serchLocationName('goal')
+    location_list = searchLocationName('goal')
     navigationAC(location_list)
     return 0
 
