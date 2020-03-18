@@ -1,4 +1,4 @@
 <launch>
     <rosparam file="$(find mimi_common_pkg)/config/competition.yaml" command="load" ns="/location_dict" />
-    <node pkg="rcj_2020_master" name="sm_bf" type="sm_bf.py" output="screen"/>
+    <node pkg="rcj_2020_master" name="ri" type="ri.py" output="screen"/>
 </launch>
