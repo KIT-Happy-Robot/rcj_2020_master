@@ -10,10 +10,13 @@
 import sys
 # ROS
 import rospy
+import rosparam
 import smach
 import smach_ros
-from voice_common_pkg.srv import GgiLearning 
+# Message
+from std_msgs.msg import String
 from std_srvs.srv import Empty
+from voice_common_pkg.srv import GgiLearning 
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
 from common_action_client import navigationAC, enterTheRoomAC, exeActionPlanAC
@@ -28,7 +31,11 @@ class Training(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
+<<<<<<< HEAD
         m6Control(0.1)
+=======
+        m6Control(0.0)
+>>>>>>> 4697c0f1e01d7bdb1d2f4817b9094f32ac8e9440
         speak('Start GoGetIt')
         # enterTheRoomAC(0.8)
         self.training_srv()
@@ -42,7 +49,7 @@ class DecideMove(smach.State):
         # Subscriber
         self.posi_sub = rospy.Subscriber('/navigation/move_place', String, self.currentPosiCB)
         # Value
-        self.operator_coord = searchLocationName('operator')
+        # self.operator_coord = searchLocationName('operator')
         self.current_position = 'operator'
 
     def currentPosiCB(self, data):
@@ -51,7 +58,8 @@ class DecideMove(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: DECIDE_MOVE')
         if self.current_position != 'operator':
-            navigationAC(self.operator_coord)
+            operator_coord = searchLocationName('operator')
+            navigationAC(operator_coord)
             speak('I arrived operator')
         else:
             pass
