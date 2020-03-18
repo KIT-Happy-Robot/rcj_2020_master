@@ -17,7 +17,7 @@ import smach_ros
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
 from common_action_client import *
 from common_function import *
-from mimi_common_pkg.srv import ManipulateSrv 
+from mimi_common_pkg.srv import ManipulateSrv, RecognizeCount 
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_voice_control/src')
 from voice_common_pkg.srv import WhatDidYouSay
@@ -45,17 +45,30 @@ class MoveAndPick(smach.State):
                             output_keys=['object_name_out'])
         #Service
         self.grab = rospy.ServiceProxy('/manipulation', ManipulateSrv)
-        self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)   
-       #parameter 
-        self.location_name = 'table'
-        self.flag = 'failed'
+        #Publisher
+        self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)
+
 
     def execute(self, userdata):
-        location_list = searchLocationName(self.location_name)
-        self.flag = navigationAC(location_list)
-        #userdata.object_name_out = userdata.object_name_in
+        location_list = searchLocationName('table')
+        navigationAC(location_list)
+        
+        rospy.wait_for_service('/object/recognize')
+        recog = rospy.ServiceProxy('/object/recognize', RecognizeCount)
+        res = recog('any')
+
+        if len(res.data) >= 2:
+            object_name = res.data[1]
+
+        elif len(res.data) == 1:
+            object_name = res.data[0]
+
+        else:
+            object_name = 'any'
+        userdata.object_name_out = object_name
         self.pub_location.publish('table')
-        result = self.grab('cup').result  #object_nameによってif等で条件分岐
+
+        result = self.grab(object_name).result  #object_nameによってif等で条件分岐
         if result == True:
             return 'success'
         else:
@@ -67,19 +80,22 @@ class MoveAndPlace(smach.State):
         smach.State.__init__(self,
                             outcomes=['completed'],
                             input_keys=['object_name_in'])
-        self.flag = 'failed'
+
         self.object_list = ['cup','bottle','snack','dish','chips',
                             'bag','toy','smartphone','book','pen']
+
+        #Service
         self.arm_srv = rospy.ServiceProxy('/servo/arm', ManipulateSrv)
         self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)
 
     def execute(self, userdata):
         if userdata.object_name_in  in self.object_list:
             location_list = searchLocationName('chair')
+            self.pub_location.publish('chair')
         else:
-            location_list = searchLocationName('chair')
-        self.flag = navigationAC(location_list)
-        self.pub_location.publish('chair')
+            location_list = searchLocationName('couch')
+            self.pub_location.publish('couch')
+        navigationAC(location_list)
         self.arm_srv('place')
         return 'completed'
 
