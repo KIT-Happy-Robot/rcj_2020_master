@@ -16,7 +16,7 @@ import smach_ros
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
 from common_action_client import *
 from common_function import *
-from mimi_common_pkg.srv import ManipulateSrv 
+from mimi_common_pkg.srv import ManipulateSrv
 
 sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_voice_control/src')
 from voice_common_pkg.srv import WhatDidYouSay
@@ -32,7 +32,7 @@ class EnterRoom(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Enter The Room')
         speak('start pick and place')
-        #enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         return 'to_pap'
 
 
@@ -40,21 +40,21 @@ class MoveAndPick(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                             outcomes=['success', 'failed'],
-                            input_keys=['object_name_in'],
                             output_keys=['object_name_out'])
         #Service
-        self.grab = rospy.ServiceProxy('/manipulation', ManipulateSrv)
+      #  self.grab = rospy.ServiceProxy('/manipulation', ManipulateSrv)
        #parameter 
         self.location_name = 'table'
         self.flag = 'failed'
 
     def execute(self, userdata):
-        #location_list = searchLocationName(self.location_name)
-        #while not rospy.is_shutdown() and self.flag == 'failed':
-        #    self.flag = navigationAC(location_list)
-        #    rospy.sleep(1.0)
-        #userdata.object_name_out = userdata.object_name_in
-        result = self.grab('cup').result  #object_nameによってif等で条件分岐
+        location_list = searchLocationName(self.location_name)
+        while not rospy.is_shutdown() and self.flag == 'failed':
+            self.flag = navigationAC(location_list)
+            rospy.sleep(1.0)
+        userdata.object_name_out = 'cup'
+       # result = self.grab(userdata.object_name_out)  #object_nameによってif等で条件分岐
+        result = True
         if result == True:
             return 'success'
         else:
@@ -69,17 +69,17 @@ class MoveAndPlace(smach.State):
         self.flag = 'failed'
         self.object_list = ['cup','bottle','snack','dish','chips',
                             'bag','toy','smartphone','book','pen']
-        self.arm_srv = rospy.ServiceProxy('/change_arm_pose', ManipulateSrv)
 
     def execute(self, userdata):
         if userdata.object_name_in  in self.object_list:
             location_list = searchLocationName('chair')
         else:
             location_list = searchLocationName('chair')
+
         while  not rospy.is_shutdown() and self.flag == 'failed':
             self.flag = navigationAC(location_list)
             rospy.sleep(1.0)
-        self.arm_srv
+        #ここにplace関数を挿入する
         return 'completed'
 
 
@@ -93,10 +93,10 @@ class AvoidThat(smach.State):
         print("AvoidThat")
         speak('start Avoid That')
         location_list = searchLocationName('operator')
-        self.flag = navigationAC(location_list)
-       # while not rospy.is_shutdown() and self.flag == 'failed':
-       #     self.flag = navigationAC(location_list)
-       #     rospy.sleep(1.0)
+       # self.flag = navigationAC(location_list)
+        while not rospy.is_shutdown() and self.flag == 'failed':
+            self.flag = navigationAC(location_list)
+            rospy.sleep(1.0)
         return 'to_WDYS'
 
 
@@ -186,13 +186,12 @@ def main():
 
         ### Pick and place
         sm_pap = smach.StateMachine(outcomes=['to_AvoidThat'])
-        sm_pap.userdata.sm_name = 'cup'
+        #sm_pap.userdata.sm_name = ''
         with sm_pap:
             smach.StateMachine.add('pick', MoveAndPick(),
                             transitions={'success':'place',
                                          'failed':'to_AvoidThat'},
-                            remapping={'object_name_out':'sm_name',
-                                       'object_name_in':'sm_name'})
+                            remapping={'object_name_out':'sm_name'})
             smach.StateMachine.add('place', MoveAndPlace(),
                             transitions={'completed':'to_AvoidThat'},
                             remapping={'object_name_in':'sm_name'})
