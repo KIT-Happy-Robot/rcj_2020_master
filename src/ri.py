@@ -17,7 +17,7 @@ from common_function import *
 def main(self):
     speak('start robot inspection')
     enterTheRoomAC(0.8)
-    location_list = serchLocationName('shelf')
+    location_list = serchLocationName('goal')
     navigationAC(location_list)
     return 0
 
