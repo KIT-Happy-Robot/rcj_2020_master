@@ -6,14 +6,12 @@
 # Date: 2020/02/24
 #----------------------------------------------------------
 
-# Python
 import sys
-# ROS
+
 import rospy
 import rosparam
 import smach
 import smach_ros
-# Message
 from std_msgs.msg import String
 from std_srvs.srv import Empty
 from voice_common_pkg.srv import GgiLearning 
@@ -31,11 +29,6 @@ class Training(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
-<<<<<<< HEAD
-        m6Control(0.1)
-=======
-        m6Control(0.0)
->>>>>>> 4697c0f1e01d7bdb1d2f4817b9094f32ac8e9440
         speak('Start GoGetIt')
         # enterTheRoomAC(0.8)
         self.training_srv()
@@ -47,12 +40,11 @@ class DecideMove(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['decide_finish'])
         # Subscriber
-        self.posi_sub = rospy.Subscriber('/navigation/move_place', String, self.currentPosiCB)
+        self.posi_sub = rospy.Subscriber('/current_location', String, self.crPosiCB)
         # Value
-        # self.operator_coord = searchLocationName('operator')
         self.current_position = 'operator'
 
-    def currentPosiCB(self, data):
+    def crPosiCB(self, data):
         self.current_position = data.data
 
     def execute(self, userdata):
@@ -74,8 +66,7 @@ class ListenCommand(smach.State):
                                          'next_cmd',
                                          'all_cmd_finish'],
                              output_keys = ['cmd_out'])
-        # ServiceProxy
-        # self.listen_srv = rospy.ServiceProxy('/gpsr/actionplan', ActionPlan)
+        # Service
         self.ggi_listen_srv = rospy.ServiceProxy('/test_phase', GgiLearning)
         # Value
         self.listen_count = 1
@@ -91,14 +82,10 @@ class ListenCommand(smach.State):
             speak('CommandNumber is ' + str(self.cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
             speak('Please instruct me')
-            # result = self.listen_srv()
             location = self.ggi_listen_srv().location_name
-            result = True
             if result:
-            # if result.result:
                 self.listen_count = 1
                 self.cmd_count += 1
-                # userdata.cmd_out = result
                 userdata.cmd_out = location
                 return 'listen_success'
             else:
@@ -121,8 +108,6 @@ class ExeAction(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state: EXE_ACTION')
-        # action = userdata.cmd_in.action
-        # data = userdata.cmd_in.data
         name = userdata.cmd_in
         action = ['go','grasp','go','give']
         data = [name,'any','operator','any']
@@ -137,18 +122,15 @@ def main():
     sm_top = smach.StateMachine(outcomes = ['finish_sm_top'])
     with sm_top:
         smach.StateMachine.add(
-                'TRAINING',
-                Training(),
+                'TRAINING', Training(),
                 transitions = {'training_finish':'DECIDE_MOVE'})
 
         smach.StateMachine.add(
-                'DECIDE_MOVE',
-                DecideMove(),
+                'DECIDE_MOVE', DecideMove(),
                 transitions = {'decide_finish':'LISTEN_COMMAND'})
 
         smach.StateMachine.add(
-                'LISTEN_COMMAND',
-                ListenCommand(),
+                'LISTEN_COMMAND', ListenCommand(),
                 transitions = {'listen_success':'EXE_ACTION',
                                'listen_failure':'LISTEN_COMMAND',
                                'next_cmd':'DECIDE_MOVE',
@@ -156,8 +138,7 @@ def main():
                 remapping = {'cmd_out':'cmd'})
 
         smach.StateMachine.add(
-                'EXE_ACTION',
-                ExeAction(),
+                'EXE_ACTION', ExeAction(),
                 transitions = {'action_success':'DECIDE_MOVE',
                                'action_failure':'DECIDE_MOVE'},
                 remapping = {'cmd_in':'cmd'})

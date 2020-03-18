@@ -6,9 +6,8 @@
 # Date: 2020/02/24
 #----------------------------------------------------------
 
-# Python
 import sys
-# ROS
+
 import rospy
 import smach
 import smach_ros
@@ -29,7 +28,7 @@ class Enter(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
         speak('Start GPSR')
-        # enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         return 'enter_finish'
 
 
@@ -39,13 +38,13 @@ class DecideMove(smach.State):
                              outcomes = ['decide_finish', 'all_cmd_finish'],
                              input_keys = ['cmd_count_in'])
         # Subscriber
-        self.posi_sub = rospy.Subscriber('/navigation/move_place', String, self.currentPosiCB)
+        self.posi_sub = rospy.Subscriber('/current_location', String, self.crPosiCB)
         # Value
         self.operator_coord = searchLocationName('operator')
         self.exit_coord = searchLocationName('exit')
         self.current_position = 'none'
 
-    def currentPosiCB(self, data):
+    def crPosiCB(self, data):
         self.current_position = data.data
 
     def execute(self, userdata):
@@ -80,16 +79,16 @@ class ListenCommand(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: LISTEN_COMMAND')
         cmd_count = userdata.cmd_count_in
-        m6Control(0.1)
+        m6Control(0.3)
         if self.listen_count <= 3:
             speak('CommandNumber is ' + str(cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
             speak('Please instruct me')
-            result = self.listen_srv()
-            if result.result:
+            result = self.listen_srv().result
+            if result:
                 speak('Is this correct?')
-                answer = self.yesno_srv()
-                if answer.result:
+                answer = self.yesno_srv().result
+                if answer:
                     self.listen_count = 1
                     cmd_count += 1
                     userdata.cmd_out = result
