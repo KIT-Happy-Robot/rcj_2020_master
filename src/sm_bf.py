@@ -29,6 +29,7 @@ class EnterRoom(smach.State):
                             outcomes=['to_pap'])
     
     def execute(self, userdata):
+        return 'to_pap'
         rospy.loginfo('Enter The Room')
         speak('start pick and place')
         enterTheRoomAC(0.8)
@@ -43,17 +44,18 @@ class MoveAndPick(smach.State):
                             output_keys=['object_name_out'])
         #Service
         self.grab = rospy.ServiceProxy('/manipulation', ManipulateSrv)
+        self.recog = rospy.ServiceProxy('/object/recognize', RecognizeCount)
         #Publisher
         self.pub_location = rospy.Publisher('/navigation/move_place', String, queue_size = 1)
 
 
     def execute(self, userdata):
         location_list = searchLocationName('table')
-        navigationAC(location_list)
+        #navigationAC(location_list)
         
         rospy.wait_for_service('/object/recognize')
-        recog = rospy.ServiceProxy('/object/recognize', RecognizeCount)
-        res = recog('any')
+        self.recog
+        res = self.recog('any')
 
         if len(res.data) >= 2:
             object_name = res.data[1]
