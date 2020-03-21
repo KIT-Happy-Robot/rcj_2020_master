@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
-#Title: 物を運んで障害物を避けながらゴールを目指すプログラム
+#Title: Basic Functio
 #Author: Ishiyama Yuki
 #Data: 2020/2.20 
 #Memo
@@ -29,7 +29,6 @@ class EnterRoom(smach.State):
                             outcomes=['to_pap'])
     
     def execute(self, userdata):
-        return 'to_pap'
         rospy.loginfo('Enter The Room')
         speak('start pick and place')
         enterTheRoomAC(0.8)
@@ -51,10 +50,9 @@ class MoveAndPick(smach.State):
 
     def execute(self, userdata):
         location_list = searchLocationName('table')
-        #navigationAC(location_list)
+        navigationAC(location_list)
         
         rospy.wait_for_service('/object/recognize')
-        self.recog
         res = self.recog('any')
 
         if len(res.data) >= 2:
@@ -81,8 +79,7 @@ class MoveAndPlace(smach.State):
                             outcomes=['completed'],
                             input_keys=['object_name_in'])
 
-        self.object_list = ['cup','bottle','snack','dish','chips',
-                            'bag','toy','smartphone','book','pen']
+        self.object_list = ['cup','bottle']
 
         #Service
         self.arm_srv = rospy.ServiceProxy('/servo/arm', ManipulateSrv)
@@ -90,8 +87,8 @@ class MoveAndPlace(smach.State):
 
     def execute(self, userdata):
         if userdata.object_name_in  in self.object_list:
-            location_list = searchLocationName('chair')
-            self.pub_location.publish('chair')
+            location_list = searchLocationName('desk')
+            self.pub_location.publish('desk')
         else:
             location_list = searchLocationName('couch')
             self.pub_location.publish('couch')
@@ -182,7 +179,7 @@ class ExitRoom(smach.State):
 
     def execute(slef, userdata):
         speak('Go to the exit')
-        location_list = searchLocationName('entrance')
+        location_list = searchLocationName('exit')
         navigationAC(location_list)
         speak('finish what did you say')
         return 'to_finish'

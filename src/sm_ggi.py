@@ -30,7 +30,7 @@ class Training(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
         speak('Start GoGetIt')
-        # enterTheRoomAC(0.8)
+        enterTheRoomAC(0.8)
         self.training_srv()
         speak('Start TestPhase')
         return 'training_finish'
@@ -82,7 +82,9 @@ class ListenCommand(smach.State):
             speak('CommandNumber is ' + str(self.cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
             speak('Please instruct me')
-            location = self.ggi_listen_srv().location_name
+            result = self.ggi_listen_srv()
+            location = result.location_name
+            result = bool(location)
             if result:
                 self.listen_count = 1
                 self.cmd_count += 1

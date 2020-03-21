@@ -28,7 +28,7 @@ class Enter(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: ENTER')
         speak('Start GPSR')
-        enterTheRoomAC(0.8)
+        # enterTheRoomAC(0.8)
         return 'enter_finish'
 
 
@@ -51,11 +51,11 @@ class DecideMove(smach.State):
         rospy.loginfo('Executing state: DECIDE_MOVE')
         if userdata.cmd_count_in == 4:
             speak('Finish all command, Move to exit')
-            navigationAC(self.exit_coord)
+            # navigationAC(self.exit_coord)
             speak('Finish GPSR')
             return 'all_cmd_finish'
         elif self.current_position != 'operator':
-            navigationAC(self.operator_coord)
+            # navigationAC(self.operator_coord)
             return 'decide_finish'
         else:
             return 'decide_finish'
@@ -84,8 +84,8 @@ class ListenCommand(smach.State):
             speak('CommandNumber is ' + str(cmd_count))
             speak('ListenCount is ' + str(self.listen_count))
             speak('Please instruct me')
-            result = self.listen_srv().result
-            if result:
+            result = self.listen_srv()
+            if result.result:
                 speak('Is this correct?')
                 answer = self.yesno_srv().result
                 if answer:
@@ -105,7 +105,7 @@ class ListenCommand(smach.State):
         else:
             speak("I couldn't understand the instruction")
             self.listen_count = 1
-            cmd_count +=1
+            cmd_count += 1
             userdata.cmd_count_out = cmd_count
             return 'next_cmd'
 
@@ -125,8 +125,10 @@ class ExeAction(smach.State):
         print data
         result = exeActionPlanAC(action, data)
         if result:
+            speak('Action success')
             return 'action_success'
         else:
+            speak('Action failed')
             return 'action_failure'
 
 
