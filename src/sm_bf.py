@@ -103,7 +103,6 @@ class AvoidThat(smach.State):
                             outcomes=['to_WDYS'])
 
     def execute(self, userdata):
-        print("AvoidThat")
         speak('start Avoid That')
         location_list = searchLocationName('operator')
         navigationAC(location_list)
@@ -149,7 +148,7 @@ class QuestionResponse(smach.State):
                             input_keys=['success_count_in', 'start_time_in'],
                             output_keys=['success_count_out', 'start_time_out'])
         self.WDYS = rospy.ServiceProxy('/bf/conversation_srvserver', WhatDidYouSay)
-        self.target_time = 160.0
+        self.target_time = 150.0
 
     def execute(self, userdata):
         end_time = time.time()

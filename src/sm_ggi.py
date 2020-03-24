@@ -111,12 +111,16 @@ class ExeAction(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Executing state: EXE_ACTION')
         name = userdata.cmd_in
-        action = ['go','grasp','go','give']
-        data = [name,'any','operator','any']
+        # action = ['go','grasp','go','give']
+        # data = [name,'any','operator','any']
+        action = ['go','go']
+        data = [name,'operator']
         result = exeActionPlanAC(action, data)
         if result:
+            speak('Action success')
             return 'action_success'
         else:
+            speak('Action failed')
             return 'action_failure'
 
 
